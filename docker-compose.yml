@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: tinybox-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: tinybox
+      POSTGRES_PASSWORD: tinybox
+      POSTGRES_DB: tinybox
+    volumes:
+      - tinybox-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tinybox"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  tinybox-pgdata:
