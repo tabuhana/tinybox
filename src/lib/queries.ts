@@ -12,6 +12,7 @@ import {
   CreateFunnelFormSchema,
   type Agency,
   type CreateMediaType,
+  type FunnelPage,
   type Lane,
   type Tag,
   type Ticket,
@@ -519,6 +520,21 @@ export const updateTicketsOrder = async (tickets: Ticket[]) => {
     });
   } catch (error) {
     console.log(error, "ERROR UPDATE TICKET ORDER");
+  }
+};
+
+export const updateFunnelPagesOrder = async (pages: FunnelPage[]) => {
+  try {
+    await db.transaction(async (tx) => {
+      for (const page of pages) {
+        await tx
+          .update(schema.funnelPage)
+          .set({ order: page.order })
+          .where(eq(schema.funnelPage.id, page.id));
+      }
+    });
+  } catch (error) {
+    console.log(error, "ERROR UPDATE FUNNEL PAGES ORDER");
   }
 };
 

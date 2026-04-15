@@ -2333,7 +2333,7 @@ assignment. Team table shows the new member.
 
 ## Phase 10: CRM Pipeline & Kanban
 
-### Task 10.1 — Pipeline Pages & Kanban Board 
+### Task 10.1 — Pipeline Pages & Kanban Board x
 
 ```
 TASK: Build the pipeline management pages with a drag-and-drop Kanban board.
@@ -2380,7 +2380,7 @@ Drag tickets between lanes. Verify order persists on reload.
 
 ## Phase 11: Funnel Builder
 
-### Task 11.1 — Funnel List & CRUD Pages
+### Task 11.1 — Funnel List & CRUD Pages x
 
 ```
 TASK: Build the funnel listing page and funnel detail/settings page.
