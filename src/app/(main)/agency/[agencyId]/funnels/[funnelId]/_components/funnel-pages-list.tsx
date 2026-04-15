@@ -21,7 +21,7 @@ import { z } from "zod";
 import { updateFunnelPagesOrder, upsertFunnelPage } from "@/lib/queries";
 import type { FunnelPage } from "@/lib/types";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const createPageSchema = z.object({
   name: z.string().min(1, "Page name is required."),
@@ -261,14 +262,13 @@ export function FunnelPagesList({
                                   <MousePointerClick className="size-3.5" />
                                   Click to open editor
                                 </div>
-                                <Button asChild variant="outline">
-                                  <Link
-                                    href={`/agency/${agencyId}/funnels/${funnelId}/editor/${page.id}`}
-                                  >
-                                    Open editor
-                                    <ExternalLink className="size-4" />
-                                  </Link>
-                                </Button>
+                                <Link
+                                  href={`/agency/${agencyId}/funnels/${funnelId}/editor/${page.id}`}
+                                  className={cn(buttonVariants({ variant: "outline" }))}
+                                >
+                                  Open editor
+                                  <ExternalLink className="size-4" />
+                                </Link>
                               </div>
                             </div>
                           </div>

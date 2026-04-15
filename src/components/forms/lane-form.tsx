@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-
 import { upsertLane } from "@/lib/queries";
 import { LaneFormSchema, type Lane } from "@/lib/types";
 
@@ -22,9 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 
-type LaneFormValues = z.infer<typeof LaneFormSchema>;
+type LaneFormValues = z.output<typeof LaneFormSchema>;
+type LaneFormInput = z.input<typeof LaneFormSchema>;
 
 type LaneFormProps = {
   pipelineId: string;
@@ -66,7 +65,7 @@ export function LaneForm({
     [lane?.name, lane?.order, pipelineId],
   );
 
-  const form = useForm<LaneFormValues>({
+  const form = useForm<LaneFormInput, unknown, LaneFormValues>({
     resolver: zodResolver(LaneFormSchema),
     defaultValues,
   });
