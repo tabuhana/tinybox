@@ -44,6 +44,7 @@ type FunnelEditorProps = {
   agencyId: string;
   funnelId: string;
   funnelPage: FunnelPage;
+  liveMode?: boolean;
 };
 
 type DragPayload =
@@ -121,9 +122,14 @@ function EditorDropZone({
   index: number;
   empty?: boolean;
 }) {
+  const previewMode = useEditorStore((store) => store.previewMode);
   const addElement = useEditorStore((store) => store.addElement);
   const moveElement = useEditorStore((store) => store.moveElement);
   const [isOver, setIsOver] = useState(false);
+
+  if (previewMode) {
+    return null;
+  }
 
   return (
     <div
@@ -200,7 +206,7 @@ function EditorCanvasNode({ element }: { element: EditorElement }) {
   return (
     <div className="space-y-3">
       <div
-        draggable={element.type !== "__body"}
+        draggable={!previewMode && element.type !== "__body"}
         className={`relative transition ${
           element.type === "__body" ? "min-h-[720px] rounded-[2rem]" : "rounded-[1.75rem]"
         } ${
@@ -211,11 +217,15 @@ function EditorCanvasNode({ element }: { element: EditorElement }) {
               : "hover:ring-1 hover:ring-primary/35 hover:ring-offset-2 hover:ring-offset-background"
         }`}
         onClick={(event) => {
+          if (previewMode) {
+            return;
+          }
+
           event.stopPropagation();
           setSelectedElement(element.id);
         }}
         onDragStart={(event) => {
-          if (element.type === "__body") {
+          if (previewMode || element.type === "__body") {
             return;
           }
 
@@ -248,6 +258,7 @@ export function FunnelEditor({
   agencyId,
   funnelId,
   funnelPage,
+  liveMode = false,
 }: FunnelEditorProps) {
   const elements = useEditorStore((store) => store.elements);
   const device = useEditorStore((store) => store.device);
@@ -297,6 +308,33 @@ export function FunnelEditor({
       }
     });
   };
+
+  const canvas = (
+    <main
+      className={
+        liveMode
+          ? "min-h-screen bg-background px-4 py-5 md:px-6"
+          : "flex min-h-[calc(100vh-220px)] flex-1 overflow-auto rounded-[2rem] border border-border/60 bg-card/70 px-4 py-5 md:px-6"
+      }
+    >
+      <div
+        className="w-full"
+        onClick={() => {
+          if (!previewMode) {
+            setSelectedElement(bodyElement?.id ?? "__body");
+          }
+        }}
+      >
+        <div className={`mx-auto w-full ${DEVICE_WIDTHS[device]} transition-[max-width] duration-300`}>
+          {bodyElement ? <EditorCanvasNode element={bodyElement} /> : null}
+        </div>
+      </div>
+    </main>
+  );
+
+  if (liveMode) {
+    return canvas;
+  }
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.08),transparent_30%)]">
@@ -424,16 +462,7 @@ export function FunnelEditor({
             </div>
           </div>
         ) : (
-          <main className="flex min-h-[calc(100vh-220px)] flex-1 overflow-auto rounded-[2rem] border border-border/60 bg-card/70 px-4 py-5 md:px-6">
-            <div
-              className="w-full"
-              onClick={() => setSelectedElement(bodyElement?.id ?? "__body")}
-            >
-              <div className={`mx-auto w-full ${DEVICE_WIDTHS[device]} transition-[max-width] duration-300`}>
-                {bodyElement ? <EditorCanvasNode element={bodyElement} /> : null}
-              </div>
-            </div>
-          </main>
+          canvas
         )}
       </div>
     </div>

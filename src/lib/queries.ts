@@ -46,6 +46,29 @@ export const getAuthUserDetails = async () => {
   return userData;
 };
 
+export const getAgencyDashboardData = async (agencyId: string) => {
+  return db.query.agency.findFirst({
+    where: eq(schema.agency.id, agencyId),
+    with: {
+      pipelines: {
+        with: {
+          lanes: {
+            with: {
+              tickets: true,
+            },
+          },
+        },
+      },
+      funnels: {
+        with: {
+          funnelPages: true,
+        },
+      },
+      contacts: true,
+    },
+  });
+};
+
 export const saveActivityLogsNotification = async ({
   agencyId,
   description,
@@ -835,10 +858,18 @@ export const searchContacts = async (searchTerms: string) => {
   });
 };
 
+export const getContactsByAgencyId = async (agencyId: string) => {
+  return db.query.contact.findMany({
+    where: eq(schema.contact.agencyId, agencyId),
+    orderBy: desc(schema.contact.createdAt),
+  });
+};
+
 export const upsertContact = async (contactData: {
   id?: string;
   name: string;
-  email: string;
+  email?: string | null;
+  phone?: string | null;
   agencyId: string;
 }) => {
   const id = contactData.id ?? crypto.randomUUID();
@@ -853,4 +884,8 @@ export const upsertContact = async (contactData: {
   }
 
   return db.query.contact.findFirst({ where: eq(schema.contact.id, id) });
+};
+
+export const deleteContact = async (contactId: string) => {
+  await db.delete(schema.contact).where(eq(schema.contact.id, contactId));
 };

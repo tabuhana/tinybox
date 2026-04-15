@@ -64,6 +64,7 @@ export type EditorStore = EditorState & EditorActions;
 export type CreateEditorStoreInput = {
   funnelPage: FunnelPage;
   elements?: unknown;
+  initialPreviewMode?: boolean;
 };
 
 const MAX_HISTORY_LENGTH = 40;
@@ -486,7 +487,11 @@ function containsElementId(element: EditorElement, targetId: string): boolean {
   return element.content.some((child) => containsElementId(child, targetId));
 }
 
-function getInitialState({ funnelPage, elements }: CreateEditorStoreInput): EditorState {
+function getInitialState({
+  funnelPage,
+  elements,
+  initialPreviewMode = false,
+}: CreateEditorStoreInput): EditorState {
   const normalizedElements = normalizeEditorElements(elements);
   const selectedElement = getRootElement(normalizedElements);
 
@@ -495,7 +500,7 @@ function getInitialState({ funnelPage, elements }: CreateEditorStoreInput): Edit
     elements: normalizedElements,
     selectedElement,
     device: "desktop",
-    previewMode: false,
+    previewMode: initialPreviewMode,
     history: {
       snapshots: [cloneElements(normalizedElements)],
       currentIndex: 0,

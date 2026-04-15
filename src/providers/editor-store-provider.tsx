@@ -25,11 +25,13 @@ export function EditorStoreProvider({
   children,
   funnelPage,
   elements,
+  initialPreviewMode,
 }: EditorStoreProviderProps) {
   const [store] = useState(() =>
     createEditorStore({
       funnelPage,
       elements,
+      initialPreviewMode,
     }),
   );
 
