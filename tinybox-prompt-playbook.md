@@ -2401,7 +2401,7 @@ TASK: Build the funnel listing page and funnel detail/settings page.
 CHECKPOINT: Create a funnel. Add pages to it. Verify in Drizzle Studio.
 ```
 
-### Task 11.2 — Funnel Editor
+### Task 11.2 — Funnel Editor x
 
 ```
 TASK: Build the drag-and-drop funnel page editor.
@@ -2447,7 +2447,7 @@ Save. Reload. Content persists.
 
 ## Phase 12: Dashboard & Contacts
 
-### Task 12.1 — Agency Dashboard with Charts
+### Task 12.1 — Agency Dashboard with Charts x
 
 ```
 TASK: Build the full agency dashboard with Tremor charts and metrics.
@@ -2482,7 +2482,7 @@ client components that receive data as props -- no auth/ORM changes needed.
 CHECKPOINT: Dashboard loads with real data from your agency.
 ```
 
-### Task 12.2 — Contacts Page & Notifications
+### Task 12.2 — Contacts Page & Notifications x
 
 ```
 TASK: Build the contacts management page and the infobar notification display.
