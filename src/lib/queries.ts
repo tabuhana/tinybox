@@ -3,6 +3,7 @@
 import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { z } from "zod";
 
 import { getCurrentUser } from "./auth-server";
@@ -25,7 +26,7 @@ type AgencyRole = Extract<
   "AGENCY_OWNER" | "AGENCY_ADMIN" | "AGENCY_MEMBER" | "AGENCY_USER"
 >;
 
-export const getAuthUserDetails = async () => {
+export const getAuthUserDetails = cache(async () => {
   const authUser = await getCurrentUser();
 
   if (!authUser?.email) {
@@ -44,7 +45,7 @@ export const getAuthUserDetails = async () => {
   });
 
   return userData;
-};
+});
 
 export const getAgencyDashboardData = async (agencyId: string) => {
   return db.query.agency.findFirst({
@@ -304,6 +305,12 @@ export const upsertAgency = async (agencyData: Agency, price?: string) => {
   }
 
   try {
+    const authUser = await getCurrentUser();
+
+    if (!authUser?.email) {
+      throw new Error("Session required to create an agency");
+    }
+
     const existingAgency = await db.query.agency.findFirst({
       where: eq(schema.agency.id, agencyData.id),
     });
@@ -321,13 +328,15 @@ export const upsertAgency = async (agencyData: Agency, price?: string) => {
 
     await db.insert(schema.agency).values(agencyData);
 
-    const authUser = await getCurrentUser();
-    const ownerEmail = authUser?.email ?? agencyData.companyEmail;
-
-    await db
+    const [linkedUser] = await db
       .update(schema.user)
       .set({ agencyId: agencyData.id, role: "AGENCY_OWNER" })
-      .where(eq(schema.user.email, ownerEmail));
+      .where(eq(schema.user.email, authUser.email))
+      .returning({ id: schema.user.id });
+
+    if (!linkedUser) {
+      throw new Error("Failed to link user to agency");
+    }
 
     const sidebarDefaults = [
       { name: "Dashboard", icon: "box" as const, link: `/agency/${agencyData.id}` },
@@ -378,25 +387,29 @@ export const upsertAgency = async (agencyData: Agency, price?: string) => {
       },
     ];
 
-    await db.insert(schema.agencySidebarOption).values(
-      sidebarDefaults.map((option, index) => ({
-        ...option,
+    await Promise.all([
+      db.insert(schema.agencySidebarOption).values(
+        sidebarDefaults.map((option, index) => ({
+          ...option,
+          agencyId: agencyData.id,
+          order: index,
+        })),
+      ),
+      db.insert(schema.pipeline).values({
+        name: "Lead Cycle",
         agencyId: agencyData.id,
-        order: index,
-      })),
-    );
-
-    await db.insert(schema.pipeline).values({
-      name: "Lead Cycle",
-      agencyId: agencyData.id,
-    });
+      }),
+    ]);
 
     return db.query.agency.findFirst({
       where: eq(schema.agency.id, agencyData.id),
     });
   } catch (error) {
-    console.log(error);
-    return null;
+    console.error(error);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("Failed to create agency");
   }
 };
 

@@ -149,17 +149,17 @@ export function AgencyDetails({ data }: AgencyDetailsProps) {
           updatedAt: new Date(),
         });
 
-        if (!agency) {
-          toast.error("Unable to create agency.");
-          return;
-        }
-
         toast.success("Agency created.");
         router.push(`/agency/${agency.id}`);
-        router.refresh();
       } catch (error) {
         console.error(error);
-        toast.error(data ? "Failed to update agency." : "Failed to create agency.");
+        const message =
+          error instanceof Error
+            ? error.message
+            : data
+              ? "Failed to update agency."
+              : "Failed to create agency.";
+        toast.error(message);
       }
     });
   });

@@ -13,7 +13,10 @@ export default async function AgencyIdLayout({
 }) {
   const { agencyId } = await params;
 
-  const userDetails = await getAuthUserDetails();
+  const [userDetails, notifications] = await Promise.all([
+    getAuthUserDetails(),
+    getNotificationAndUser(agencyId),
+  ]);
 
   if (!userDetails?.agency) {
     redirect("/agency");
@@ -23,8 +26,6 @@ export default async function AgencyIdLayout({
     redirect("/agency/unauthorized");
   }
 
-  const notifications = (await getNotificationAndUser(agencyId)) ?? [];
-
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
@@ -32,7 +33,7 @@ export default async function AgencyIdLayout({
         sidebarOptions={userDetails.agency.agencySidebarOptions}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Infobar notifications={notifications} />
+        <Infobar notifications={notifications ?? []} />
         <main className="flex-1 overflow-y-auto p-4">{children}</main>
       </div>
     </div>
