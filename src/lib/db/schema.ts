@@ -392,6 +392,7 @@ export const funnel = pgTable(
     description: text("description"),
     published: boolean("published").default(false).notNull(),
     subDomainName: text("sub_domain_name"),
+    liveProducts: text("live_products"),
     agencyId: text("agency_id")
       .notNull()
       .references(() => agency.id, { onDelete: "cascade" }),
@@ -426,6 +427,7 @@ export const funnelPage = pgTable(
     order: integer("order").default(0).notNull(),
     visits: integer("visits").default(0).notNull(),
     content: text("content"),
+    previewImage: text("preview_image"),
     funnelId: text("funnel_id")
       .notNull()
       .references(() => funnel.id, { onDelete: "cascade" }),
