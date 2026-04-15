@@ -216,6 +216,13 @@ export const getUser = async (id: string) => {
   return db.query.user.findFirst({ where: eq(schema.user.id, id) });
 };
 
+export const getTeamMembers = async (agencyId: string) => {
+  return db.query.user.findMany({
+    where: eq(schema.user.agencyId, agencyId),
+    orderBy: asc(schema.user.name),
+  });
+};
+
 export const updateUser = async (userData: Partial<User>) => {
   if (!userData.email) {
     throw new Error("Email required");

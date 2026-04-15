@@ -30,6 +30,13 @@ export type TicketAndTags = Ticket & { tags: Tag[] };
 
 export type LaneDetail = Lane & { tickets: TicketAndTags[] };
 
+export type TicketWithRelations = TicketAndTags & {
+  assignedUser: User | null;
+  customer: Contact | null;
+};
+
+export type LaneWithRelations = Lane & { tickets: TicketWithRelations[] };
+
 export const FunnelPageSchema = z.object({
   name: z.string().min(1),
   pathName: z.string().min(1),
