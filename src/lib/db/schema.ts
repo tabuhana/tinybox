@@ -170,6 +170,7 @@ export const agency = pgTable(
   {
     id: id(),
     name: varchar("name", { length: 255 }).notNull(),
+    agencyLogo: text("agency_logo"),
     companyEmail: text("company_email").notNull(),
     companyPhone: text("company_phone"),
     whiteLabel: boolean("white_label").default(false).notNull(),
@@ -392,6 +393,7 @@ export const funnel = pgTable(
     description: text("description"),
     published: boolean("published").default(false).notNull(),
     subDomainName: text("sub_domain_name"),
+    favicon: text("favicon"),
     liveProducts: text("live_products"),
     agencyId: text("agency_id")
       .notNull()
@@ -423,7 +425,7 @@ export const funnelPage = pgTable(
   {
     id: id(),
     name: text("name").notNull(),
-    pathName: text("path_name").notNull(),
+    pathName: text("path_name").default("").notNull(),
     order: integer("order").default(0).notNull(),
     visits: integer("visits").default(0).notNull(),
     content: text("content"),

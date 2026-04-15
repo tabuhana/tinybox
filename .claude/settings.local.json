@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E '\\\\.\\(ts|tsx\\)$')",
+      "Bash(xargs wc:*)",
+      "Bash(find src/app -name 'page.tsx' -exec sh -c 'wc -l \"$1\" | awk \"{print \\\\$1}\" | head -c 5' _ {} \\\\;)",
+      "Bash(bun run:*)"
+    ]
+  }
+}

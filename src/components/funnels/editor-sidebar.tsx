@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  Columns2,
   CreditCard,
+  FileText,
   ImageIcon,
   LayoutPanelTop,
   Link2,
@@ -18,6 +20,7 @@ import {
   type EditorElement,
 } from "@/stores/editor-store";
 
+import type { Media } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +41,12 @@ const templates: TemplateDefinition[] = [
     title: "Container",
     description: "Flexible grouping block for sections and nested layouts.",
     icon: LayoutPanelTop,
+  },
+  {
+    type: "2Col",
+    title: "Two columns",
+    description: "Side-by-side layout with two nested drop zones.",
+    icon: Columns2,
   },
   {
     type: "text",
@@ -78,7 +87,12 @@ const templates: TemplateDefinition[] = [
 ];
 
 function getInsertionTarget(selectedElement: EditorElement | null, rootId: string) {
-  if (selectedElement && (selectedElement.type === "__body" || selectedElement.type === "container")) {
+  if (
+    selectedElement &&
+    (selectedElement.type === "__body" ||
+      selectedElement.type === "container" ||
+      selectedElement.type === "2Col")
+  ) {
     return selectedElement.id;
   }
 
@@ -302,7 +316,11 @@ function ElementSpecificFields({ selectedElement }: { selectedElement: EditorEle
   return null;
 }
 
-export function EditorSidebar() {
+type EditorSidebarProps = {
+  media?: Media[];
+};
+
+export function EditorSidebar({ media = [] }: EditorSidebarProps) {
   const elements = useEditorStore((store) => store.elements);
   const selectedElement = useEditorStore((store) => store.selectedElement);
   const addElement = useEditorStore((store) => store.addElement);
@@ -311,6 +329,21 @@ export function EditorSidebar() {
 
   const rootId = elements[0]?.id ?? "__body";
   const insertionTarget = getInsertionTarget(selectedElement, rootId);
+
+  const canReceiveMediaSrc =
+    selectedElement?.type === "image" || selectedElement?.type === "video";
+
+  const applyMediaToSelection = (item: Media) => {
+    if (!canReceiveMediaSrc || !selectedElement) {
+      return;
+    }
+
+    updateElement(selectedElement.id, {
+      props: {
+        src: item.link,
+      },
+    });
+  };
 
   return (
     <aside className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card/90 shadow-2xl shadow-primary/5">
@@ -329,8 +362,9 @@ export function EditorSidebar() {
       <Tabs defaultValue="elements" className="flex-1 overflow-hidden">
         <div className="border-b border-border/60 px-4 py-3">
           <TabsList className="w-full">
-            <TabsTrigger value="elements">Elements</TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
+            <TabsTrigger value="elements">Components</TabsTrigger>
+            <TabsTrigger value="media">Media</TabsTrigger>
+            <TabsTrigger value="properties">Settings</TabsTrigger>
           </TabsList>
         </div>
 
@@ -372,6 +406,60 @@ export function EditorSidebar() {
                 </button>
               );
             })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="media" className="h-full overflow-y-auto px-4 py-4">
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Media library</p>
+              <p className="text-sm text-muted-foreground">
+                {canReceiveMediaSrc
+                  ? "Click a file to apply it to the selected element."
+                  : "Select an image or video element to apply media from here."}
+              </p>
+            </div>
+            {media.length === 0 ? (
+              <div className="flex min-h-40 items-center justify-center rounded-[1.25rem] border border-dashed border-border/60 bg-muted/10 px-4 text-center text-sm text-muted-foreground">
+                Add media in the library to see it here.
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {media.map((item) => {
+                  const isImage = item.type === "image";
+                  const isVideo = item.type === "video";
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      disabled={!canReceiveMediaSrc}
+                      onClick={() => applyMediaToSelection(item)}
+                      className="group flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30 transition hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
+                      title={item.name}
+                    >
+                      {isImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.link}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : isVideo ? (
+                        <video
+                          src={item.link}
+                          className="h-full w-full object-cover"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </TabsContent>
 

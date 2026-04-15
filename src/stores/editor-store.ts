@@ -9,6 +9,7 @@ export type EditorDevice = "desktop" | "tablet" | "mobile";
 export type EditorBtns =
   | "__body"
   | "container"
+  | "2Col"
   | "text"
   | "video"
   | "image"
@@ -69,7 +70,7 @@ export type CreateEditorStoreInput = {
 
 const MAX_HISTORY_LENGTH = 40;
 
-const containerTypes = new Set<EditorBtns>(["__body", "container"]);
+const containerTypes = new Set<EditorBtns>(["__body", "container", "2Col"]);
 
 function createId(prefix: string) {
   return `${prefix}_${crypto.randomUUID()}`;
@@ -113,6 +114,57 @@ export function createEditorElement(type: Exclude<EditorBtns, "__body">): Editor
         },
         props: {},
         content: [],
+      };
+    case "2Col":
+      return {
+        id: createId("two_cols"),
+        type,
+        name: "Two columns",
+        styles: {
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "16px",
+          padding: "24px",
+          borderRadius: "24px",
+          backgroundColor: "transparent",
+        },
+        props: {},
+        content: [
+          {
+            id: createId("container"),
+            type: "container",
+            name: "Column 1",
+            styles: {
+              padding: "16px",
+              minHeight: "160px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "20px",
+            },
+            props: {},
+            content: [],
+          },
+          {
+            id: createId("container"),
+            type: "container",
+            name: "Column 2",
+            styles: {
+              padding: "16px",
+              minHeight: "160px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              backgroundColor: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "20px",
+            },
+            props: {},
+            content: [],
+          },
+        ],
       };
     case "text":
       return {
@@ -264,7 +316,7 @@ function normalizeElement(value: unknown): EditorElement | null {
 
   const normalizedType = type as EditorBtns;
 
-  if (!["__body", "container", "text", "video", "image", "link", "contactForm", "paymentForm"].includes(normalizedType)) {
+  if (!["__body", "container", "2Col", "text", "video", "image", "link", "contactForm", "paymentForm"].includes(normalizedType)) {
     return null;
   }
 

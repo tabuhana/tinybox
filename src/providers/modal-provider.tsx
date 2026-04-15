@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -33,12 +32,7 @@ export function useModal() {
 }
 
 function ModalProvider({ children }: { children: ReactNode }) {
-  const [isMounted, setIsMounted] = useState(false);
   const [data, setData] = useState<ModalData | null>(null);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const setOpen = useCallback((next: ModalData) => {
     setData(next);
@@ -90,7 +84,7 @@ function ModalProvider({ children }: { children: ReactNode }) {
   return (
     <ModalContext.Provider value={value}>
       {children}
-      {isMounted && showingModal}
+      {showingModal}
     </ModalContext.Provider>
   );
 }

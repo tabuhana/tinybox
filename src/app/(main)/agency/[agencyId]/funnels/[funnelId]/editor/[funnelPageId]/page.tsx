@@ -6,6 +6,7 @@ import {
   getAuthUserDetails,
   getFunnel,
   getFunnelPageDetails,
+  getMedia,
 } from "@/lib/queries";
 
 function parseEditorContent(content: string | null) {
@@ -40,9 +41,10 @@ export default async function FunnelPageEditorRoute({
     redirect("/agency/unauthorized");
   }
 
-  const [funnel, funnelPage] = await Promise.all([
+  const [funnel, funnelPage, mediaData] = await Promise.all([
     getFunnel(funnelId),
     getFunnelPageDetails(funnelPageId),
+    getMedia(agencyId),
   ]);
 
   if (!funnel || funnel.agencyId !== agencyId) {
@@ -59,7 +61,12 @@ export default async function FunnelPageEditorRoute({
       funnelPage={funnelPage}
       elements={parseEditorContent(funnelPage.content)}
     >
-      <FunnelEditor agencyId={agencyId} funnelId={funnelId} funnelPage={funnelPage} />
+      <FunnelEditor
+        agencyId={agencyId}
+        funnelId={funnelId}
+        funnelPage={funnelPage}
+        media={mediaData?.media ?? []}
+      />
     </EditorStoreProvider>
   );
 }

@@ -321,10 +321,13 @@ export const upsertAgency = async (agencyData: Agency, price?: string) => {
 
     await db.insert(schema.agency).values(agencyData);
 
+    const authUser = await getCurrentUser();
+    const ownerEmail = authUser?.email ?? agencyData.companyEmail;
+
     await db
       .update(schema.user)
-      .set({ agencyId: agencyData.id })
-      .where(eq(schema.user.email, agencyData.companyEmail));
+      .set({ agencyId: agencyData.id, role: "AGENCY_OWNER" })
+      .where(eq(schema.user.email, ownerEmail));
 
     const sidebarDefaults = [
       { name: "Dashboard", icon: "box" as const, link: `/agency/${agencyData.id}` },
@@ -448,6 +451,11 @@ export const upsertPipeline = async (pipelineData: {
     await db.insert(schema.pipeline).values({ ...pipelineData, id });
   }
 
+  await saveActivityLogsNotification({
+    agencyId: pipelineData.agencyId,
+    description: `${existing ? "Updated" : "Created"} pipeline | ${pipelineData.name}`,
+  });
+
   return db.query.pipeline.findFirst({
     where: eq(schema.pipeline.id, id),
   });
@@ -508,6 +516,17 @@ export const upsertLane = async (laneData: {
     await db.update(schema.lane).set({ ...laneData, order }).where(eq(schema.lane.id, id));
   } else {
     await db.insert(schema.lane).values({ ...laneData, id, order });
+  }
+
+  const pipeline = await db.query.pipeline.findFirst({
+    where: eq(schema.pipeline.id, laneData.pipelineId),
+  });
+
+  if (pipeline) {
+    await saveActivityLogsNotification({
+      agencyId: pipeline.agencyId,
+      description: `${existing ? "Updated" : "Created"} lane | ${laneData.name}`,
+    });
   }
 
   return db.query.lane.findFirst({
@@ -606,13 +625,22 @@ export const upsertTicket = async (
     with: {
       assignedUser: true,
       customer: true,
-      lane: true,
+      lane: {
+        with: { pipeline: true },
+      },
       tagToTickets: { with: { tag: true } },
     },
   });
 
   if (!result) {
     return null;
+  }
+
+  if (result.lane?.pipeline) {
+    await saveActivityLogsNotification({
+      agencyId: result.lane.pipeline.agencyId,
+      description: `${existing ? "Updated" : "Created"} ticket | ${ticketData.name}`,
+    });
   }
 
   return {
@@ -710,6 +738,11 @@ export const createMedia = async (agencyId: string, mediaFile: CreateMediaType) 
     agencyId,
   });
 
+  await saveActivityLogsNotification({
+    agencyId,
+    description: `Added media | ${mediaFile.name}`,
+  });
+
   return db.query.media.findFirst({
     where: eq(schema.media.link, mediaFile.link),
   });
@@ -761,6 +794,11 @@ export const upsertFunnel = async (
       agencyId,
     });
   }
+
+  await saveActivityLogsNotification({
+    agencyId,
+    description: `${existing ? "Updated" : "Created"} funnel | ${funnelData.name}`,
+  });
 
   return db.query.funnel.findFirst({ where: eq(schema.funnel.id, id) });
 };
@@ -826,6 +864,11 @@ export const upsertFunnelPage = async (
 
   revalidatePath(`/agency/${agencyId}/funnels/${funnelId}`, "page");
 
+  await saveActivityLogsNotification({
+    agencyId,
+    description: `${existing ? "Updated" : "Created"} funnel page | ${funnelPageData.name}`,
+  });
+
   return db.query.funnelPage.findFirst({
     where: eq(schema.funnelPage.id, pageId),
   });
@@ -883,9 +926,41 @@ export const upsertContact = async (contactData: {
     await db.insert(schema.contact).values({ ...contactData, id });
   }
 
+  await saveActivityLogsNotification({
+    agencyId: contactData.agencyId,
+    description: `${existing ? "Updated" : "Created"} contact | ${contactData.name}`,
+  });
+
   return db.query.contact.findFirst({ where: eq(schema.contact.id, id) });
 };
 
 export const deleteContact = async (contactId: string) => {
   await db.delete(schema.contact).where(eq(schema.contact.id, contactId));
+};
+
+export const submitFunnelContact = async (input: {
+  agencyId: string;
+  name: string;
+  email?: string;
+  phone?: string;
+}) => {
+  const name = input.name.trim();
+
+  if (!name) {
+    throw new Error("Name is required.");
+  }
+
+  const id = crypto.randomUUID();
+  const email = input.email?.trim() || null;
+  const phone = input.phone?.trim() || null;
+
+  await db.insert(schema.contact).values({
+    id,
+    agencyId: input.agencyId,
+    name,
+    email,
+    phone,
+  });
+
+  return { id };
 };

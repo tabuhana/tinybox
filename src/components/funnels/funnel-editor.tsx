@@ -17,7 +17,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 import { upsertFunnelPage } from "@/lib/queries";
-import type { FunnelPage } from "@/lib/types";
+import type { FunnelPage, Media } from "@/lib/types";
 import { useEditorStore } from "@/providers/editor-store-provider";
 import {
   createEditorElement,
@@ -33,9 +33,11 @@ import {
   LinkComponent,
   PaymentFormComponent,
   TextComponent,
+  TwoColumnsComponent,
   VideoComponent,
 } from "@/components/funnels/editor-elements";
 import { EditorSidebar } from "@/components/funnels/editor-sidebar";
+import { FunnelRuntimeProvider } from "@/components/funnels/funnel-runtime-context";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -45,6 +47,7 @@ type FunnelEditorProps = {
   funnelId: string;
   funnelPage: FunnelPage;
   liveMode?: boolean;
+  media?: Media[];
 };
 
 type DragPayload =
@@ -98,6 +101,8 @@ function renderElementContent(element: EditorElement, children: React.ReactNode)
       );
     case "container":
       return <ContainerComponent element={element}>{children}</ContainerComponent>;
+    case "2Col":
+      return <TwoColumnsComponent element={element}>{children}</TwoColumnsComponent>;
     case "text":
       return <TextComponent element={element} />;
     case "video":
@@ -200,7 +205,8 @@ function EditorCanvasNode({ element }: { element: EditorElement }) {
   const selectedId = useEditorStore((store) => store.selectedElement?.id);
   const setSelectedElement = useEditorStore((store) => store.setSelectedElement);
   const previewMode = useEditorStore((store) => store.previewMode);
-  const isContainer = element.type === "__body" || element.type === "container";
+  const isContainer =
+    element.type === "__body" || element.type === "container" || element.type === "2Col";
   const isSelected = selectedId === element.id;
 
   return (
@@ -259,6 +265,7 @@ export function FunnelEditor({
   funnelId,
   funnelPage,
   liveMode = false,
+  media = [],
 }: FunnelEditorProps) {
   const elements = useEditorStore((store) => store.elements);
   const device = useEditorStore((store) => store.device);
@@ -333,10 +340,15 @@ export function FunnelEditor({
   );
 
   if (liveMode) {
-    return canvas;
+    return (
+      <FunnelRuntimeProvider agencyId={agencyId} funnelId={funnelId} liveMode>
+        {canvas}
+      </FunnelRuntimeProvider>
+    );
   }
 
   return (
+    <FunnelRuntimeProvider agencyId={agencyId} funnelId={funnelId} liveMode={false}>
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.08),transparent_28%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.08),transparent_30%)]">
       <div className="mx-auto flex min-h-screen w-full max-w-[1700px] flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
         <header className="rounded-[2rem] border border-border/60 bg-card/90 p-5 shadow-xl shadow-primary/5 backdrop-blur">
@@ -440,7 +452,7 @@ export function FunnelEditor({
         {sidebarOpen && !previewMode ? (
           <div className="grid min-h-[calc(100vh-220px)] gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
             <div className="min-h-0">
-              <EditorSidebar />
+              <EditorSidebar media={media} />
             </div>
             <div className="min-h-0">
               <div className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-border/60 bg-card/70">
@@ -466,5 +478,6 @@ export function FunnelEditor({
         )}
       </div>
     </div>
+    </FunnelRuntimeProvider>
   );
 }

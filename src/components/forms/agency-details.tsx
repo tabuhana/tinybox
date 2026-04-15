@@ -134,6 +134,7 @@ export function AgencyDetails({ data }: AgencyDetailsProps) {
         const agency = await upsertAgency({
           id: crypto.randomUUID(),
           name: values.name,
+          agencyLogo: null,
           companyEmail: values.companyEmail,
           companyPhone: normalizeString(values.companyPhone),
           whiteLabel: values.whiteLabel,
